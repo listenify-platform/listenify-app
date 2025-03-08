@@ -3,14 +3,14 @@ import type {
   StoreDefinition,
   _ActionsTree,
   _GettersTree,
-} from "pinia";
-import { defineStore } from "pinia";
+} from 'pinia';
+import { defineStore } from 'pinia';
 
 // Define initialization status types
 type InitStatus = 'pending' | 'initializing' | 'success' | 'error';
 
 // Enhanced initializer store with more detailed state tracking
-const useStoreInitializer = defineStore("initializerStore", {
+const useStoreInitializer = defineStore('store-initializer', {
   state: () => ({
     initStates: {} as Record<string, { 
       status: InitStatus, 
@@ -113,7 +113,7 @@ export function useInitializableStore<
       
       // Access the initialization methods with type safety 
       const anyStore = store as any;
-      const initFunction = anyStore["initialize"] || anyStore["init"];
+      const initFunction = anyStore['initialize'] || anyStore['init'];
       
       // Setup automatic refresh if interval is specified
       if (options.refreshInterval && !initIntervals.has(storeId)) {
@@ -144,7 +144,7 @@ export function useInitializableStore<
           return store;
         }
         
-        if (typeof initFunction === "function") {
+        if (typeof initFunction === 'function') {
           storeInitializer.setInitializing(storeId);
           
           try {
