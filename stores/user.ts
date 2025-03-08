@@ -11,7 +11,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
     loading: false,
     isAuthenticated: false
   });
-  
+
   // Computed properties (getters)
   const friends = computed(() => state.user?.connections?.friends || []);
   const blocked = computed(() => state.user?.connections?.blocked || []);
@@ -21,11 +21,11 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
   const following = computed(() => state.user?.connections?.following || []);
   const favorites = computed(() => state.user?.connections?.favorites || []);
   const accessToken = computed(() => state.token || null);
-  
+
   // Optional: Role-based computed properties
   const isAdmin = computed(() => state.user?.roles?.includes('admin') || false);
   const isModerator = computed(() => state.user?.roles?.includes('moderator') || false);
-  
+
   // Initialize the store
   async function initialize() {
     const token = userStorage.has('access_token') ? userStorage.get('access_token') : null;
@@ -35,16 +35,20 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
       if (typeof token !== 'string')
         return;
 
+      state.loading = true;
+
       await execute<Users.User>(
         () => api.auth.getCurrentUser(),
         {
           onError: () => {
+            state.loading = false;
             state.isAuthenticated = false;
             userStorage.set('access_token', null);
           },
           onSuccess: (user) => {
             state.user = user;
             state.token = token;
+            state.loading = false;
             state.isAuthenticated = true;
           }
         }
@@ -68,7 +72,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
         onSuccess: (response) => {
           state.loading = false;
           state.isAuthenticated = true;
-          
+
           state.user = response.user;
           state.token = response.token;
           userStorage.set('access_token', response.token);
@@ -76,7 +80,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
       }
     );
   }
-  
+
   async function register(data: API.RegisterRequest) {
     if (state.loading || state.isAuthenticated)
       return;
@@ -101,7 +105,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
       }
     );
   }
-  
+
   async function logout() {
     if (state.loading || !state.isAuthenticated)
       return;
@@ -124,7 +128,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
       }
     );
   }
-  
+
   async function updateProfile(profileData: API.UserUpdateRequest) {
     if (state.loading || !state.isAuthenticated)
       return;
@@ -144,7 +148,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
       }
     );
   }
-  
+
   async function changePassword(passwordData: API.PasswordChangeRequest) {
     if (state.loading || !state.isAuthenticated)
       return;
@@ -163,7 +167,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
       }
     );
   }
-  
+
   async function refreshToken() {
     if (!state.isAuthenticated)
       return;
@@ -190,7 +194,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
   return {
     // State
     ...toRefs(state),
-    
+
     // Computed properties (getters)
     friends,
     blocked,
@@ -202,7 +206,7 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
     accessToken,
     isAdmin,
     isModerator,
-    
+
     // Actions
     initialize,
     login,
