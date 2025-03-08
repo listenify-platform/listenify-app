@@ -3,10 +3,35 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
-  plugins: ['~/plugins/init-auth.ts'],
+  plugins: ['~/plugins/init-auth.ts', '~/plugins/fontawesome.ts', '~/plugins/tippy.ts'],
+
+  hooks: {
+    "prerender:routes"({ routes }) {
+      routes.clear() // Do not generate any routes (except the defaults)
+    }
+  },
+
+  build: {
+    transpile: ['@fortawesome/vue-fontawesome']
+  },
+
+  css: [
+    '@fortawesome/fontawesome-svg-core/styles.css'
+  ],
 
   // Disable SSR for faster development
   ssr: false,
+  app: {
+    head: {
+      title: 'Listenify',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+      ]
+    },
+    baseURL: '/',
+    buildAssetsDir: '/assets/',
+  },
 
   // Modules configuration
   pinia: {

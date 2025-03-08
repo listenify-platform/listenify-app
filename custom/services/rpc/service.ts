@@ -17,7 +17,7 @@ const DEFAULT_OPTIONS: WebSocketOptions = {
   token: '',
   debug: false,
   timeout: 5000,
-  pingInterval: 1000,
+  pingInterval: 15000,
   autoReconnect: true,
   reconnectionDelay: 1000,
   reconnectionAttempts: 6,
@@ -52,11 +52,7 @@ export class JSONRPCService {
   constructor(options: Partial<WebSocketOptions>) {
     // Merge provided options with defaults
     this.state.options = { ...DEFAULT_OPTIONS, ...options };
-
-    // Include WSS protocol if not provided
-    const protocols = ['ws:', 'wss:'];
-    if (this.state.options.url && !protocols.includes(this.state.options.url.split(':')[0]))
-      this.state.options.url = `${WS_PROTOCOL}//${this.state.options.url}`;
+    this.state.options.url = `${WS_PROTOCOL}//${this.state.options.url}`;
     
     // Connect automatically if autoReconnect is enabled
     if (this.state.options.autoReconnect && this.state.options.url)

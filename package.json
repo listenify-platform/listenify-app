@@ -12,15 +12,21 @@
   "dependencies": {
     "@nuxtjs/tailwindcss": "6.13.1",
     "@pinia/nuxt": "0.10.1",
+    "@vesp/nuxt-fontawesome": "1.2.1",
     "axios": "^1.8.2",
     "nuxt": "^3.16.0",
     "pinia": "^3.0.1",
     "reka-ui": "^2.0.2",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "vue-tippy": "^6.6.0"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "devDependencies": {
+    "@fortawesome/free-brands-svg-icons": "^6.7.2",
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
     "sass": "^1.85.1"
   }
 }

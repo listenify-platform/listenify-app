@@ -5,16 +5,13 @@ import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse 
 /**
  * Base API service with common functionality
  */
+const config = _getAppConfig();
 
 export class BaseApiService {
   protected axios: AxiosInstance;
-  protected baseUrl: string;
+  protected baseUrl: string = `${location.protocol}//${config.API_URL}`;
 
   constructor() {
-    const config = _getAppConfig();
-
-    this.baseUrl = `${location.protocol}//${config.API_URL}`;
-
     this.axios = axios.create({
       baseURL: this.baseUrl,
       headers: {
