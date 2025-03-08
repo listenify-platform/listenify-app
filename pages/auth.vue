@@ -4,9 +4,18 @@ definePageMeta({
   allowWhenLogged: false
 })
 
+import { setupAuth, passwordRule, usernameRule, confirmPasswordRule } from '~/custom';
 import { TabsContent, TabsIndicator, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 
-const activeTab = ref<string>('login');
+const { 
+  loading,
+  loginForm,
+  currentTab,
+  formsValid,
+  handleForm,
+  registerForm,
+  handleValidation,
+} = setupAuth();
 </script>
 
 <style lang="scss" scoped module>
@@ -147,7 +156,7 @@ const activeTab = ref<string>('login');
   <div :class="$style['auth__container']">
     <div :class="$style['auth__form']">
       <div :class="$style['auth__content']">
-        <TabsRoot default-value="login" v-model="activeTab" :class="$style['auth__tabs']">
+        <TabsRoot default-value="login" v-model="currentTab" :class="$style['auth__tabs']">
           <TabsList :class="$style['auth__tabs-list']">
             <TabsIndicator :class="$style['auth__tabs-indicator']">
               <div :class="$style['auth__indicator-line']"></div>
@@ -165,13 +174,34 @@ const activeTab = ref<string>('login');
             <!-- login -->
             <TabsContent value="login" :class="$style['auth__tab-content']">
               <div :class="$style['auth__tab-inner']">
-                <form :class="$style['auth__form-fields']">
-                  <CommonFormsInput id="email" type="email" required placeholder="E-mail address"
-                    input-placeholder="Enter your e-mail address" />
-                  <CommonFormsInput id="password" type="password" required placeholder="Password" show-password
-                    input-placeholder="Enter your password" />
+                <form :class="$style['auth__form-fields']" @submit.prevent="handleForm">
+                  <CommonFormsInput
+                    id="login-email" 
+                    type="email" 
+                    placeholder="E-mail address"
+                    input-placeholder="Enter your e-mail address" 
+                    required
+                    v-model="loginForm.email" 
+                    @validation="handleValidation('email', $event)"
+                  />
+                  <CommonFormsInput
+                    id="login-password" 
+                    type="password" 
+                    placeholder="Password"
+                    input-placeholder="Enter your password" 
+                    required 
+                    :rules="[passwordRule]"
+                    show-password
+                    v-model="loginForm.password" 
+                    @validation="handleValidation('password', $event)"
+                  />
 
-                  <CommonButton type="submit" variant="primary">
+                  <CommonButton
+                    type="submit"
+                    :loading="loading" 
+                    :disabled="!formsValid.login || loading"
+                    variant="primary"
+                  >
                     <span>Sign in</span>
                   </CommonButton>
                 </form>
@@ -181,17 +211,55 @@ const activeTab = ref<string>('login');
             <!-- register -->
             <TabsContent value="register" :class="$style['auth__tab-content']">
               <div :class="$style['auth__tab-inner']">
-                <form :class="$style['auth__form-fields']">
-                  <CommonFormsInput id="username" type="text" required placeholder="Username"
-                    input-placeholder="Create a username" />
-                  <CommonFormsInput id="register-email" type="email" required placeholder="E-mail address"
-                    input-placeholder="Enter your e-mail address" />
-                  <CommonFormsInput id="register-password" type="password" required placeholder="Password" show-password
-                    input-placeholder="Create a password" />
-                  <CommonFormsInput id="confirm-password" type="password" required placeholder="Confirm password" show-password
-                    input-placeholder="Confirm your password" />
+                <form :class="$style['auth__form-fields']" @submit.prevent="handleForm">
+                  <CommonFormsInput 
+                    id="register-username" 
+                    type="text" 
+                    placeholder="Username"
+                    input-placeholder="Enter your username" 
+                    required 
+                    :rules="[usernameRule]"
+                    v-model="registerForm.username" 
+                    @validation="handleValidation('username', $event)"
+                  />
+                  <CommonFormsInput
+                    id="register-email" 
+                    type="email" 
+                    placeholder="E-mail address"
+                    input-placeholder="Enter your e-mail address" 
+                    required
+                    v-model="registerForm.email" 
+                    @validation="handleValidation('email', $event)"
+                  />
+                  <CommonFormsInput
+                    id="register-password" 
+                    type="password" 
+                    placeholder="Password"
+                    input-placeholder="Create a password" 
+                    required 
+                    :rules="[passwordRule]"
+                    show-password
+                    v-model="registerForm.password" 
+                    @validation="handleValidation('password', $event)"
+                  />
+                  <CommonFormsInput
+                    id="register-confirm" 
+                    type="password" 
+                    placeholder="Confirm password"
+                    input-placeholder="Confirm your password" 
+                    required
+                    show-password
+                    :rules="[confirmPasswordRule(registerForm.password)]"
+                    v-model="registerForm.confirmPassword" 
+                    @validation="handleValidation('confirmPassword', $event)"
+                  />
 
-                  <CommonButton type="submit" variant="primary">
+                  <CommonButton
+                    type="submit"
+                    :loading="loading" 
+                    :disabled="!formsValid.register || loading"
+                    variant="primary"
+                  >
                     <span>Create account</span>
                   </CommonButton>
                 </form>

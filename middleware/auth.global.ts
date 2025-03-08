@@ -3,18 +3,22 @@ export default defineNuxtRouteMiddleware((to, from) => {
   if (!to.meta.requiresAuth && to.meta.allowWhenLoggedIn !== false) {
     return;
   }
-  
-  // Check if user is logged in (using localStorage for this example)
-  const userStorage = useCookie('user-token');
-  const isLoggedIn = !!userStorage.value;
+
+  // Check if user is logged in
+  const { isAuthenticated } = useUserStore();
   
   // Case 1: Route requires authentication and user is not logged in
-  if (to.meta.requiresAuth && !isLoggedIn) {
-    return navigateTo('/auth');
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    // Add the current route path as a redirect query parameter
+    return navigateTo({
+      path: '/auth',
+      query: { redirect: to.fullPath }
+    });
   }
   
   // Case 2: Route doesn't allow logged in users but user is logged in
-  if (to.meta.allowWhenLoggedIn === false && isLoggedIn) {
+  if (to.meta.allowWhenLoggedIn === false && isAuthenticated) {
+    // For this case we typically just redirect to home without a redirect parameter
     return navigateTo('/'); // Redirect to home page or dashboard
   }
 });

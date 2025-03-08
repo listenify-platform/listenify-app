@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <listenify-root data-listenify-app>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-  </div>
+  </listenify-root>
   <NuxtRouteAnnouncer />
 </template>

@@ -1,17 +1,19 @@
+import { _getAppConfig } from '#app';
 import { userStorage } from '../../storage';
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 
 /**
  * Base API service with common functionality
  */
-const config = useAppConfig();
 
 export class BaseApiService {
   protected axios: AxiosInstance;
   protected baseUrl: string;
 
   constructor() {
-    this.baseUrl = config.API_URL;
+    const config = _getAppConfig();
+
+    this.baseUrl = `${location.protocol}//${config.API_URL}`;
 
     this.axios = axios.create({
       baseURL: this.baseUrl,
