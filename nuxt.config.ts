@@ -8,6 +8,10 @@ export default defineNuxtConfig({
   ssr: false,
 
   // Modules configuration
+  pinia: {
+    storesDirs: ['./stores/**']
+  },
+
   tailwindcss: {
     viewer: true,
     cssPath: ['~/assets/css/tailwind.css', { injectPosition: "first" }],
