@@ -458,7 +458,16 @@ async function createUserSprite(user: any): Promise<void> {
   // Store avatar ID for later
   user._avatarId = avatarId;
   
-  // Create a placeholder image
+  // Start loading the avatar immediately - this is the key change
+  const avatar = findAvatar(avatarId);
+  if (avatar) {
+    // Start loading in the background
+    avatar.load().catch(err => {
+      console.error(`Error pre-loading avatar for ${user.id}:`, err);
+    });
+  }
+  
+  // Create a placeholder image that will be replaced when loading completes
   const placeholderImg = createLoadingPlaceholder();
   
   // Calculate position based on grid
@@ -522,7 +531,7 @@ async function loadAvatarForUser(userId: string): Promise<void> {
       return;
     }
     
-    // Actually load the avatar
+    // Force load the avatar immediately without waiting
     const loadedAvatar = await loadAvatar(avatarId);
     
     if (!loadedAvatar) {
