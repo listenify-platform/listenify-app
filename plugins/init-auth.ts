@@ -22,7 +22,7 @@ export default defineNuxtPlugin(() => {
         }
         
         // Check if there's a saved path in localStorage from a previous session
-        const savedPath = userStorage.get('last_path');
+        const savedPath = userStorage.has('last_path') ? userStorage.get('last_path') : undefined;
         if (savedPath && !IGNORE_PATHS.includes(savedPath)) {
           console.log('returning to saved path', savedPath);
           userStorage.set('last_path', null); // Clear it after use
