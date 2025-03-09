@@ -25,18 +25,6 @@ const props = defineProps({
   color: {
     type: String,
     default: '#60a5fa' // Spotify-like green
-  },
-  routeSpecificText: {
-    type: Object as PropType<Record<string, string>>,
-    default: () => ({
-      '/': 'Loading'
-      // Add more route-specific messages as needed
-    })
-  },
-  // Enable route-specific loading text
-  useRouteSpecificText: {
-    type: Boolean,
-    default: true
   }
 });
 
@@ -90,34 +78,6 @@ const unregisterComponentLoading = (componentId: string) => {
     hideLoader();
   }
 };
-
-// ----- Route Hooks -----
-
-// Before route change
-router.beforeEach((to, from, next) => {
-  // Skip showing loader for same-path navigation (e.g. hash changes)
-  if (to.path === from.path) {
-    next();
-    return;
-  }
-  
-  currentRoutePath.value = to.path;
-  
-  // Get route-specific text if enabled
-  if (props.useRouteSpecificText) {
-    // Find most specific matching route
-    const matchedRoute = Object.keys(props.routeSpecificText)
-      .sort((a, b) => b.length - a.length) // Sort by length (most specific first)
-      .find(path => to.path.startsWith(path));
-    
-    const loadingText = matchedRoute ? props.routeSpecificText[matchedRoute] : 'Loading...';
-    showLoader(loadingText, 'route');
-  } else {
-    showLoader('Loading...', 'route');
-  }
-  
-  next();
-});
 
 // Page navigation hooks (already in your code, enhanced)
 nuxt.hook("page:start", () => { 
@@ -176,13 +136,6 @@ defineExpose({
           </svg>
         </div>
         <div class="loading-text" v-text="text || 'Loading'"></div>
-        
-        <!-- Display component loading details for debugging (optional) -->
-        <div v-if="loadingType === 'component' && pendingComponents.size > 0" class="loading-details">
-          <div class="text-xs text-gray-300 italic">
-            Loading {{ pendingComponents.size }} component(s)
-          </div>
-        </div>
       </div>
     </div>
   </Transition>
@@ -192,16 +145,7 @@ defineExpose({
 .loading {
   &-screen {
     @apply fixed inset-0 w-full h-full flex backdrop-blur-2xl justify-center items-center z-50;
-    background-color: rgba(0, 0, 0, 0.6);
-    
-    // Optional: different styling based on loading type
-    &[data-type="route"] {
-      background-color: rgba(0, 0, 0, 0.8);
-    }
-    
-    &[data-type="component"] {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
+    background-color: rgba(0, 0, 0, 0.25);
   }
   
   &-content {
@@ -210,7 +154,7 @@ defineExpose({
   }
   
   &-text {
-    @apply text-white text-xl font-medium lowercase tracking-wider;
+    @apply text-white text-xl font-medium lowercase tracking-tighter;
   }
   
   &-spinner {
