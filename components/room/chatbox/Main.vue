@@ -2,17 +2,41 @@
 
 <style lang="scss" scoped module>
 .chat-box {
-  @apply w-80 bg-black/90 border-l border-gray-800 flex flex-col h-full;
+  @apply w-80 bg-black/90 border-l border-gray-800 h-full relative;
 
   .chat-welcome {
     @apply p-4 text-sm text-gray-400 border-b border-gray-800/30;
+    height: 44px;
   }
 
   .chat-messages {
-    @apply flex-1 overflow-y-auto px-4 py-2;
+    @apply absolute inset-x-0 overflow-auto;
+    top: 44px; // Height of welcome message
+    bottom: 64px; // Height of input container + padding
+    
+    :deep(.simplebar-wrapper) {
+      @apply h-full;
+    }
+
+    :deep(.simplebar-content-wrapper) {
+      @apply h-full;
+    }
+
+    :deep(.simplebar-content) {
+      @apply h-full flex flex-col p-4;
+    }
+
+    :deep(.simplebar-track.simplebar-vertical) {
+      @apply w-2;
+      right: 2px;
+
+      .simplebar-scrollbar:before {
+        @apply bg-white/20;
+      }
+    }
     
     .chat-message {
-      @apply flex items-start gap-2 mb-3 last:mb-0;
+      @apply flex items-start pl-2 pr-2 gap-2 mb-4 last:mb-0;
       
       .message-avatar {
         @apply w-6 h-6 rounded-full flex-shrink-0;
@@ -45,7 +69,7 @@
   }
 
   .chat-input-container {
-    @apply p-3 border-t border-gray-800 flex items-center;
+    @apply absolute inset-x-0 bottom-0 p-3 border-t border-gray-800 flex items-center bg-black/90 z-10;
     
     .input-wrapper {
       @apply flex-1 relative;
@@ -70,44 +94,85 @@
 <script setup lang="ts">
 import 'simplebar-vue/dist/simplebar.min.css';
 import simplebar from 'simplebar-vue';
-import type { Chat } from '~/custom';
+import { useChatStore } from '~/stores/chat';
+import { useRoomStore } from '~/stores/room';
+import { storeToRefs } from 'pinia';
 
-const emit = defineEmits(['message-sent']);
+// Get stores
+const chatStore = useChatStore();
+const roomStore = useRoomStore();
 
-const props = defineProps({
-  messages: {
-    type: Array as () => Chat.Message[],
-    required: true
-  }
+// Get reactive refs from stores
+const { messages, pendingMessages } = storeToRefs(chatStore);
+const { currentRoom } = storeToRefs(roomStore);
+
+// Computed property for combined messages
+const allMessages = computed(() => {
+  // Ensure we have valid arrays to work with
+  const serverMessages = Array.isArray(messages.value) ? messages.value : [];
+  const pendingArray = pendingMessages.value ? 
+    Array.from(pendingMessages.value.values()) : [];
+  
+  // Combine and sort messages, with null checks
+  return [...serverMessages, ...pendingArray]
+    .filter(msg => msg != null)
+    .sort((a, b) => {
+      const timeA = new Date(a.timestamp || Date.now()).getTime();
+      const timeB = new Date(b.timestamp || Date.now()).getTime();
+      return timeA - timeB;
+    });
 });
 
 // Message input
 const newMessage = ref('');
-const messagesScroll = ref<HTMLElement | null>(null);
-const messagesContainer = ref<HTMLElement | null>(null);
+const messagesContainer = ref<InstanceType<typeof simplebar> | null>(null);
+
+// Helper function to scroll to bottom
+const scrollToBottom = async () => {
+  await nextTick();
+  if (messagesContainer.value) {
+    const el = messagesContainer.value.$el as HTMLElement;
+    const scrollElement = el.querySelector('.simplebar-content-wrapper') as HTMLElement;
+    if (scrollElement) {
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+    }
+  }
+};
 
 // Send message function
 const sendMessage = () => {
   if (newMessage.value.trim()) {
-    emit('message-sent', newMessage.value);
+    chatStore.sendMessage(newMessage.value);
     newMessage.value = '';
+    scrollToBottom();
   }
 };
 
 // Auto-scroll to bottom when new messages arrive
-watch(() => props.messages.length, async () => {
-  await nextTick();
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+watch(() => allMessages.value.length, scrollToBottom);
+
+// Load chat history when entering room
+watch(() => currentRoom.value?.id, async (newRoomId) => {
+  if (newRoomId) {
+    await chatStore.loadChatHistory(newRoomId);
+  } else {
+    chatStore.clearMessages();
   }
 });
 
 // Initial scroll to bottom on mount
 onMounted(async () => {
-  await nextTick();
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  scrollToBottom();
+  
+  // Load initial chat history if in a room
+  if (currentRoom.value?.id) {
+    await chatStore.loadChatHistory(currentRoom.value.id);
   }
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  chatStore.clearMessages();
 });
 </script>
 
@@ -119,20 +184,32 @@ onMounted(async () => {
     </div>
 
     <!-- Messages container -->
-    <div :class="$style['chat-messages']" ref="messagesContainer">
-      <simplebar ref="messagesScroll">
-        <div></div>
-      </simplebar>
-      <!-- <div v-for="(message, idx) in messages" :key="idx" class="chat-message">
-        <div class="message-content">
-          <div class="message-header">
-            <span class="username">
+    <div :class="$style['chat-messages']">
+      <simplebar ref="messagesContainer" class="h-full">
+        <div class="h-full flex flex-col flex-grow">
+          <div v-for="message in allMessages" :key="message.id" :class="$style['chat-message']">
+            <!-- <img 
+              :src="`/avatars/${message.user.avatarConfig.collection}/${message.user.avatarConfig.number}.png`" 
+              :class="$style['message-avatar']" 
+              :alt="message.user.username"
+            /> -->
+            <div :class="$style['message-content']">
+              <div :class="$style['message-header']">
+                <div 
+                  :class="$style['badge']" 
+                  :style="{ backgroundColor: message.userRole === 'admin' ? '#ff5722' : '#4caf50' }"
+                ></div>
+                <span :class="$style['username']" v-text="message.user.username"></span>
+              </div>
+              <p :class="$style['message-text']" v-text="message.content"></p>
+            </div>
+            <span :class="$style['message-time']">
+              {{ new Date(message.timestamp).toLocaleTimeString() }}
+              {{ message.id.startsWith('pending-') ? '(sending...)' : '' }}
             </span>
           </div>
-          <p class="message-text" v-text="message.content"></p>
         </div>
-        <span class="message-time">{{ message.time }}</span>
-      </div> -->
+      </simplebar>
     </div>
 
     <!-- Input area -->

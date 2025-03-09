@@ -252,9 +252,9 @@ function loadVisibleAvatars() {
   
   // Load avatars for users in the first few rows and the current user
   for (const [userId, user] of users.entries()) {
-    if (user.isCurrentUser || (user._position && user._position.r < visibleRows.value)) {
-      loadAvatarForUser(userId);
-    }
+    // if (user.isCurrentUser || (user._position && user._position.r < visibleRows.value)) {
+    loadAvatarForUser(userId);
+    // }
   }
 }
 

@@ -47,7 +47,8 @@
           <div :class="$style.desertElementFour"></div>
         </div>
 
-        <LazyRoomCanvasAudience ref="audienceView" :current-user="user!" :users-data="currentRoom.users" :enable-animation="true" />
+        <LazyRoomCanvasAudience ref="audienceView" :current-user="user!" :users-data="currentRoom.users"
+          :enable-animation="true" />
 
         <!-- Controls overlay -->
         <div :class="$style.controlsOverlay">
@@ -93,26 +94,24 @@
             </div>
 
             <div :class="$style.progressBarContainer">
-              <div :class="$style.progressBar" :style="{width: `${songProgress}%`}"></div>
+              <div :class="$style.progressBar" :style="{ width: `${songProgress}%` }"></div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Chat panel -->
-      <RoomChatboxMain
-        :messages="chatMessages" 
-        @send-message="sendChatMessage" 
-      />
+      <RoomChatboxMain :messages="chatMessages" @send-message="sendChatMessage" />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { LazyRoomCanvasAudience, RoomCanvasAudience, RoomChatboxMain } from '#components';
-import { RPC, type Chat, type Users } from '@/custom';
+import { RPC, type Chat, type Users, type EventSubscription } from '@/custom';
 
-// Route and navigation
+// RPC, Route and navigation
+const rpc = useRpc();
 const route = useRoute();
 const router = useRouter();
 const slug = computed(() => route.params.slug as string);
@@ -124,6 +123,8 @@ const { user } = userStore;
 
 // Component state
 const isLoading = ref(true);
+
+const subscriptions = ref<EventSubscription[]>([]);
 const loadingMessage = ref('Loading room...');
 const roomNotFound = ref(false);
 const audienceView = ref<typeof RoomCanvasAudience | null>(null);
@@ -151,31 +152,31 @@ const loadRoom = async () => {
   try {
     isLoading.value = true;
     loadingMessage.value = 'Validating room...';
-    
+
     // First check if the room exists by slug
     const room = await roomStore.getRoomBySlug(slug.value);
-    
+
     if (!room) {
       roomNotFound.value = true;
       isLoading.value = false;
       return;
     }
-    
+
     // Check if we're already in this room
     const isAlreadyInRoom = currentRoom.value && currentRoom.value.id === room.id;
-    
+
     if (!isAlreadyInRoom) {
       loadingMessage.value = 'Joining room...';
       console.log(room);
       await roomStore.joinRoom(room.id);
     }
-    
+
     // Start polling for room updates
     startRoomUpdates();
-    
+
     // Check if user has already voted
     userVote.value = roomStore.userVote;
-    
+
   } catch (error) {
     console.error('Failed to load room:', error);
     loadingMessage.value = 'Error loading room';
@@ -202,7 +203,7 @@ const handlePlaySong = async () => {
     await roomStore.joinQueue();
     return;
   }
-  
+
   // If user is DJ, show song selection
   // This would open a dialog or navigate to song selection
   console.log('Open song selection');
@@ -210,7 +211,7 @@ const handlePlaySong = async () => {
 
 const vote = async (voteType: 'woot' | 'meh' | 'grab') => {
   if (!currentRoom.value?.currentMedia) return;
-  
+
   try {
     // Toggle vote if clicking the same one again
     if (userVote.value === voteType) {
@@ -219,7 +220,7 @@ const vote = async (voteType: 'woot' | 'meh' | 'grab') => {
       userVote.value = null;
       return;
     }
-    
+
     userVote.value = voteType;
     await roomStore.voteOnMedia(voteType);
   } catch (error) {
@@ -231,7 +232,7 @@ const vote = async (voteType: 'woot' | 'meh' | 'grab') => {
 
 const sendChatMessage = async (message: string) => {
   if (!message.trim() || !currentRoom.value) return;
-  
+
   try {
     await roomStore.sendChatMessage(message);
     // The message will be added via the RPC event handler
@@ -243,7 +244,7 @@ const sendChatMessage = async (message: string) => {
 // Define RPC event handlers with proper wrapper functions
 function handleUserJoin(data: { roomId: string, user: Users.Public }) {
   if (!currentRoom.value || data.roomId !== currentRoom.value.id) return;
-  
+
   // Call the exposed method on the audience component
   if (audienceView.value) {
     audienceView.value.addUser(data.user);
@@ -252,7 +253,7 @@ function handleUserJoin(data: { roomId: string, user: Users.Public }) {
 
 function handleUserLeave(data: { roomId: string, userId: string }) {
   if (!currentRoom.value || data.roomId !== currentRoom.value.id) return;
-  
+
   // Call the exposed method on the audience component
   if (audienceView.value) {
     audienceView.value.removeUser(data.userId);
@@ -262,7 +263,7 @@ function handleUserLeave(data: { roomId: string, userId: string }) {
 // Handle chat messages from RPC
 function handleChatMessage(data: { roomId: string, message: Chat.Message }) {
   if (!currentRoom.value || data.roomId !== currentRoom.value.id) return;
-  
+
   // Add message to chat
   chatMessages.value.push(data.message);
 }
@@ -277,16 +278,21 @@ const getUserInitials = (user: Users.Public) => {
 let updateInterval: number | null = null;
 const startRoomUpdates = () => {
   if (updateInterval) return;
-  
+
   // Update song progress every second
   updateInterval = window.setInterval(() => {
     // Only update if component is active or if we're the current DJ
-    if ((isComponentActive.value || roomStore.isCurrentDJ) && 
-        currentRoom.value?.currentMedia && 
-        roomStore.currentRoom?.mediaProgress !== undefined) {
+    if ((isComponentActive.value || roomStore.isCurrentDJ) &&
+      currentRoom.value?.currentMedia &&
+      roomStore.currentRoom?.mediaProgress !== undefined) {
       roomStore.updateMediaProgress(roomStore.currentRoom.mediaProgress + 1);
     }
   }, 1000);
+
+  // Bind RPC events using wrapper functions
+  subscriptions.value.push(rpc.on(RPC.Methods.USER_JOINED_ROOM, handleUserJoin));
+  subscriptions.value.push(rpc.on(RPC.Methods.USER_LEFT_ROOM, handleUserLeave));
+  subscriptions.value.push(rpc.on(RPC.Methods.ROOM_CHAT_MESSAGE, handleChatMessage));
 };
 
 const stopRoomUpdates = () => {
@@ -294,6 +300,8 @@ const stopRoomUpdates = () => {
     clearInterval(updateInterval);
     updateInterval = null;
   }
+
+  subscriptions.value.forEach(subscription => subscription.unsubscribe());
 };
 
 /**
@@ -303,10 +311,10 @@ const stopRoomUpdates = () => {
  */
 const pauseRoomUpdates = () => {
   isComponentActive.value = false;
-  
+
   // We can optionally reduce the update frequency here
   // but keep the connection alive
-  
+
   // Note: We keep the interval running but the update
   // logic will check isComponentActive before updating
 };
@@ -316,7 +324,7 @@ const pauseRoomUpdates = () => {
  */
 const resumeRoomUpdates = () => {
   isComponentActive.value = true;
-  
+
   // Restart interval if needed
   if (!updateInterval) {
     startRoomUpdates();
@@ -325,16 +333,9 @@ const resumeRoomUpdates = () => {
 
 // Lifecycle hooks
 onMounted(async () => {
-  const rpc = useRpc();
-
   // Load the room data
   await loadRoom();
 
-  // Bind RPC events using wrapper functions
-  rpc.on(RPC.Methods.USER_JOINED_ROOM, handleUserJoin);
-  rpc.on(RPC.Methods.USER_LEFT_ROOM, handleUserLeave);
-  rpc.on(RPC.Methods.ROOM_CHAT_MESSAGE, handleChatMessage);
-  
   // Set up event listeners
   window.addEventListener('focus', handleWindowFocus);
   window.addEventListener('blur', handleWindowBlur);
@@ -342,13 +343,6 @@ onMounted(async () => {
 
 // Cleanup on final unmount (component destroyed, not just deactivated)
 onUnmounted(() => {
-  const rpc = useRpc();
-
-  // Remove RPC event handlers
-  rpc.off(RPC.Methods.USER_JOINED_ROOM);
-  rpc.off(RPC.Methods.USER_LEFT_ROOM);
-  rpc.off(RPC.Methods.ROOM_CHAT_MESSAGE);
-  
   // Clean up intervals but keep room connection
   stopRoomUpdates();
   window.removeEventListener('focus', handleWindowFocus);
@@ -575,7 +569,12 @@ definePageMeta({
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

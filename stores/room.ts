@@ -88,7 +88,7 @@ export const useRoomStore = useInitializableStore(defineStore('room', () => {
         // If user is in a room, leave gracefully
         if (state.currentRoom) {
           // Use notify instead of call since we won't be around to handle the response
-          rpc.notify(
+          rpc.call(
             RPC.Methods.LEAVE_ROOM, 
             { roomId: state.currentRoom.id }
           );
