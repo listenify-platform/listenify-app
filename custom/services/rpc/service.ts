@@ -7,9 +7,8 @@ import {
   ConnectionState,
 } from './types';
 
-import { reactive, toRefs } from 'vue';
-
 const WS_PROTOCOL: string = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const errorPrefixes = ['Error', 'Failed', 'reached'];
 const JSONRPC_VERSION: string = '2.0';
 
 const DEFAULT_OPTIONS: WebSocketOptions = {
@@ -52,11 +51,9 @@ export class JSONRPCService {
   constructor(options: Partial<WebSocketOptions>) {
     // Merge provided options with defaults
     this.state.options = { ...DEFAULT_OPTIONS, ...options };
-    this.state.options.url = `${WS_PROTOCOL}//${this.state.options.url}`;
     
     // Connect automatically if autoReconnect is enabled
-    if (this.state.options.autoReconnect && this.state.options.url)
-      this.connect();
+    if (this.state.options.autoReconnect && this.state.options.url) this.connect();
   }
   
   /**
@@ -78,9 +75,7 @@ export class JSONRPCService {
     Object.assign(this.state.options, options);
     
     // If URL or token changed and we were connected, reconnect
-    if (wasConnected && (urlChanged || tokenChanged)) {
-      this.disconnect().then(() => this.connect());
-    }
+    if (wasConnected && (urlChanged || tokenChanged)) this.disconnect().then(() => this.connect());
   }
   
   /**
@@ -105,8 +100,9 @@ export class JSONRPCService {
       // Build URL with token if provided
       let url = this.state.options.url;
       if (this.state.options.token) {
-        url = `${url}${url.includes('?') ? '&' : '?'}token=${this.state.options.token}`;
+        url = `${WS_PROTOCOL}//${url}${url.includes('?') ? '&' : '?'}token=${this.state.options.token}`;
       }
+      this.log(`connecting`, url);
       
       try {
         this.socket = new WebSocket(url);
@@ -604,7 +600,6 @@ export class JSONRPCService {
    */
   private log(message: string, ...args: any[]): void {
     if (this.state.options.debug) {
-      const errorPrefixes = ['Error', 'Failed'];
 
       if (errorPrefixes.some(prefix => message.startsWith(prefix))) {
         console.error(`internal/rpc_service error: ${message}`, ...args);

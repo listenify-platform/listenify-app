@@ -300,4 +300,94 @@ export namespace RPC {
       /** When the user was last active */
       lastActive: Date;
     }
+
+    export enum Methods {
+      // Room methods
+      JOIN_ROOM           = 'room.join',
+      LEAVE_ROOM          = 'room.leave',
+      CREATE_ROOM         = 'room.create',
+      UPDATE_ROOM         = 'room.update',
+      DELETE_ROOM         = 'room.delete',
+      SEARCH_ROOMS        = 'room.search',
+      GET_ROOM_STATE      = 'room.getState',
+      GET_ROOM_USERS      = 'room.getUsers',
+      GET_ROOM_BY_ID      = 'room.get',
+      IS_USER_IN_ROOM     = 'room.isUserInRoom',
+      GET_ROOM_BY_SLUG    = 'room.getBySlug',
+      GET_ACTIVE_ROOMS    = 'room.getActive',
+      GET_POPULAR_ROOMS   = 'room.getPopular',
+    
+      // Room subscription methods
+      ROOM_TRACK_END      = 'room:track_end',
+      USER_LEFT_ROOM      = 'room:user_leave',
+      ROOM_TRACK_SKIP     = 'room:dj_change',
+      USER_JOINED_ROOM    = 'room:user_join',
+      ROOM_TRACK_START    = 'room:track_start',
+      ROOM_QUEUE_UPDATE   = 'room:queue_update',
+      ROOM_CHAT_MESSAGE   = 'room:chat_message',
+    
+      // Chat methods
+      SEND_CHAT_MESSAGE   = 'chat.sendMessage',
+      GET_CHAT_MESSAGES   = 'chat.getMessages',
+      DELETE_CHAT_MESSAGE = 'chat.deleteMessage',
+    
+      // Chat subscription methods
+      CHAT_MESSAGE        = 'chat:message',
+    
+      // Queue methods
+      GET_QUEUE           = 'queue.get',
+      JOIN_QUEUE          = 'queue.join',
+      PLAY_MEDIA          = 'queue.playMedia',
+      LEAVE_QUEUE         = 'queue.leave',
+      CLEAR_QUEUE         = 'queue.clear',
+      MOVE_IN_QUEUE       = 'queue.move',
+      ADVANCE_QUEUE       = 'queue.advance',
+      SHUFFLE_QUEUE       = 'queue.shuffle',
+      GET_CURRENT_DJ      = 'queue.getCurrentDJ',
+      GET_PLAY_HISTORY    = 'queue.getHistory',
+      IS_USER_IN_QUEUE    = 'queue.isUserInQueue',
+      GET_CURRENT_MEDIA   = 'queue.getCurrentMedia',
+      SKIP_CURRENT_TRACK  = 'queue.skipCurrentTrack',
+      IS_USER_CURRENT_DJ  = 'queue.isUserCurrentDJ',
+    
+      // Queue subscription methods
+      DJ_NEXT            = 'dj:next',
+      TRACK_END          = 'track:end',
+      TRACK_SKIP         = 'track:skip',
+      TRACK_VOTE         = 'track:vote',
+      TRACK_START        = 'track:start',
+      DJ_WAITLIST_UPDATE = 'dj:waitlist_update',
+    
+      // Media methods
+      SEARCH_MEDIA        = 'media.search',
+      GET_MEDIA_INFO      = 'media.getInfo',
+    
+      // Playlist methods
+      GET_PLAYLISTS         = 'playlist.get',
+      CREATE_PLAYLIST       = 'playlist.create',
+      UPDATE_PLAYLIST       = 'playlist.update',
+      DELETE_PLAYLIST       = 'playlist.delete',
+      IMPORT_PLAYLIST       = 'playlist.import',
+      SHUFFLE_PLAYLIST      = 'playlist.shuffle',
+      SEARCH_PLAYLISTS      = 'playlist.search',
+      ADD_PLAYLIST_ITEM     = 'playlist.addItem',
+      GET_USER_PLAYLISTS    = 'playlist.getUserPlaylists',
+      SET_ACTIVE_PLAYLIST   = 'playlist.setActive',
+      GET_ACTIVE_PLAYLIST   = 'playlist.getActive',
+      REMOVE_PLAYLIST_ITEM  = 'playlist.removeItem',
+    
+      // User methods
+      LOGIN                 = 'user.login',
+      LOGOUT                = 'user.logout',
+      REGISTER              = 'user.register',
+      GET_PROFILE           = 'user.getProfile',
+      SEARCH_USERS          = 'user.searchUsers',
+      GET_USER_RANK         = 'user.getRank',
+      GET_TOP_USERS         = 'user.getTopUsers',
+      UPDATE_PROFILE        = 'user.updateProfile',
+      GET_USER_STATS        = 'user.getStats',
+      CHANGE_PASSWORD       = 'user.changePassword',
+      GET_XP_PROGRESS       = 'user.getExperienceProgress',
+      GET_ONLINE_USERS      = 'user.getOnlineUsers',
+    }
   }

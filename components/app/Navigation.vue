@@ -17,7 +17,7 @@ const sidebarWidth = ref(0);
 provide('sidebarWidth', sidebarWidth);
 
 // Inject player bar visibility state
-const showPlayerBar = inject('showPlayerBar', ref(false));
+const showPlayerBar = inject('showPlayerBar', ref(true));
 
 // Set sidebar width on mount
 function mounted(): void {

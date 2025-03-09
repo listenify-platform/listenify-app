@@ -1,9 +1,16 @@
 <script setup lang="ts">
 const nuxt = useNuxtApp();
+const router = useRouter();
+const route = useRoute();
+
 const text = ref<string | null>(null);
 const isLoading = ref<boolean>(true);
 const progress = ref<number>(0);
-const loadingType = ref<'default' | 'content' | 'api' | 'upload'>('default');
+const loadingType = ref<'default' | 'content' | 'api' | 'upload' | 'component' | 'route'>('default');
+const currentRoutePath = ref<string>('');
+
+// For tracking component loading
+const pendingComponents = ref<Set<string>>(new Set());
 
 // Optional props to customize behavior
 const props = defineProps({
@@ -17,62 +24,128 @@ const props = defineProps({
   },
   color: {
     type: String,
-    default: '#1DB954' // Spotify-like green
+    default: '#60a5fa' // Spotify-like green
+  },
+  routeSpecificText: {
+    type: Object as PropType<Record<string, string>>,
+    default: () => ({
+      '/': 'Loading'
+      // Add more route-specific messages as needed
+    })
+  },
+  // Enable route-specific loading text
+  useRouteSpecificText: {
+    type: Boolean,
+    default: true
   }
 });
 
+// Track when loading started to enforce minimum display time
+let loadingStartTime = 0;
+
 // Expose methods to be used by parent components
-const showLoader = (loadingText?: string, type: 'default' = 'default') => {
+const showLoader = (loadingText?: string, type: 'default' | 'content' | 'api' | 'upload' | 'component' | 'route' = 'default') => {
   text.value = loadingText || null;
   loadingType.value = type;
   isLoading.value = true;
+  loadingStartTime = Date.now();
 };
 
-const hideLoader = () => {
-  isLoading.value = false;
-  progress.value = 0;
+const hideLoader = (force = false) => {
+  const elapsed = Date.now() - loadingStartTime;
+  const remainingTime = Math.max(0, props.minDisplayTime - elapsed);
+  
+  // If there are still components loading, don't hide unless forced
+  if (!force && pendingComponents.value.size > 0) {
+    return;
+  }
+  
+  // Ensure loader displays for at least minDisplayTime
+  if (remainingTime > 0 && !force) {
+    setTimeout(() => {
+      isLoading.value = false;
+      progress.value = 0;
+    }, remainingTime);
+  } else {
+    isLoading.value = false;
+    progress.value = 0;
+  }
 };
 
 const updateProgress = (value: number) => {
   progress.value = Math.min(Math.max(value, 0), 100);
 };
 
-// Track when loading started to enforce minimum display time
-let loadingStartTime = 0;
+// Component loading tracking
+const registerComponentLoading = (componentId: string) => {
+  pendingComponents.value.add(componentId);
+  if (!isLoading.value) {
+    showLoader('Loading component...', 'component');
+  }
+};
 
-// Page navigation hooks
+const unregisterComponentLoading = (componentId: string) => {
+  pendingComponents.value.delete(componentId);
+  if (pendingComponents.value.size === 0 && loadingType.value === 'component') {
+    hideLoader();
+  }
+};
+
+// ----- Route Hooks -----
+
+// Before route change
+router.beforeEach((to, from, next) => {
+  // Skip showing loader for same-path navigation (e.g. hash changes)
+  if (to.path === from.path) {
+    next();
+    return;
+  }
+  
+  currentRoutePath.value = to.path;
+  
+  // Get route-specific text if enabled
+  if (props.useRouteSpecificText) {
+    // Find most specific matching route
+    const matchedRoute = Object.keys(props.routeSpecificText)
+      .sort((a, b) => b.length - a.length) // Sort by length (most specific first)
+      .find(path => to.path.startsWith(path));
+    
+    const loadingText = matchedRoute ? props.routeSpecificText[matchedRoute] : 'Loading...';
+    showLoader(loadingText, 'route');
+  } else {
+    showLoader('Loading...', 'route');
+  }
+  
+  next();
+});
+
+// Page navigation hooks (already in your code, enhanced)
 nuxt.hook("page:start", () => { 
   loadingStartTime = Date.now();
-  loadingType.value = 'default';
+  if (loadingType.value !== 'route') { // Don't override if route loading is active
+    loadingType.value = 'default';
+  }
   progress.value = 0;
   isLoading.value = true; 
 });
 
 nuxt.hook("page:finish", () => { 
-  const elapsed = Date.now() - loadingStartTime;
-  const remainingTime = Math.max(0, props.minDisplayTime - elapsed);
-  
-  // Ensure loader displays for at least minDisplayTime
-  if (remainingTime > 0) {
-    setTimeout(() => {
-      isLoading.value = false;
-    }, remainingTime);
-  } else {
-    isLoading.value = false;
-  }
+  hideLoader();
 });
 
 // Expose methods to be used by other components via template refs
 defineExpose({
   showLoader,
   hideLoader,
-  updateProgress
+  updateProgress,
+  registerComponentLoading,
+  unregisterComponentLoading
 });
 </script>
 
 <template>
   <Transition name="fade">
-    <div v-if="isLoading" class="loading-screen" :data-type="loadingType">
+    <div v-if="isLoading" class="loading-screen" :data-type="loadingType" :data-route="currentRoutePath">
       <div class="loading-content">
         <div class="loading-spinner">
           <svg v-if="!showProgress" class="spinner" viewBox="0 0 50 50">
@@ -103,6 +176,13 @@ defineExpose({
           </svg>
         </div>
         <div class="loading-text" v-text="text || 'Loading'"></div>
+        
+        <!-- Display component loading details for debugging (optional) -->
+        <div v-if="loadingType === 'component' && pendingComponents.size > 0" class="loading-details">
+          <div class="text-xs text-gray-300 italic">
+            Loading {{ pendingComponents.size }} component(s)
+          </div>
+        </div>
       </div>
     </div>
   </Transition>
@@ -112,6 +192,16 @@ defineExpose({
 .loading {
   &-screen {
     @apply fixed inset-0 w-full h-full flex backdrop-blur-2xl justify-center items-center z-50;
+    background-color: rgba(0, 0, 0, 0.6);
+    
+    // Optional: different styling based on loading type
+    &[data-type="route"] {
+      background-color: rgba(0, 0, 0, 0.8);
+    }
+    
+    &[data-type="component"] {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
   }
   
   &-content {
@@ -125,6 +215,10 @@ defineExpose({
   
   &-spinner {
     @apply w-16 h-16;
+  }
+  
+  &-details {
+    @apply mt-2;
   }
 }
 

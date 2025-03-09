@@ -5,8 +5,8 @@ import { ErrorCode, ConnectionState, getJSONRPCService } from '@/custom';
  * Vue composable for JSONRPC functionality
  * @returns JSONRPC utilities and state
  */
-export function useRpc() {
-  const JSONRPCService = getJSONRPCService();
+export async function useRpc() {
+  const JSONRPCService = await getJSONRPCService();
   const { connectionState, connected, lastError, reconnecting } = JSONRPCService.getState();
   
   // Derived state
