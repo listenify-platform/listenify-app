@@ -59,8 +59,8 @@ class RoomService extends BaseApiService {
    * @param slug Room slug
    * @returns Promise with the room
    */
-  async getRoomBySlug(slug: string): Promise<Rooms.Room[]> {
-    return this.get<Rooms.Room[]>(`/rooms?slug=${slug}`);
+  async getRoomBySlug(slug: string): Promise<Rooms.Room> {
+    return this.get<Rooms.Room>(`/rooms/by-slug/${slug}`);
   }
 
   /**

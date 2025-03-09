@@ -33,6 +33,11 @@ export default defineNuxtConfig({
     buildAssetsDir: '/assets/',
   },
 
+  // Dev
+  devServer: {
+    host: '0.0.0.0'
+  },
+
   // Modules configuration
   pinia: {
     storesDirs: ['./stores/**']

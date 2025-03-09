@@ -54,6 +54,9 @@ export class JSONRPCService {
     
     // Connect automatically if autoReconnect is enabled
     if (this.state.options.autoReconnect && this.state.options.url) this.connect();
+
+    // Disconnect when refreshed
+    window.addEventListener("beforeunload", this.disconnect.bind(this));
   }
   
   /**
@@ -154,9 +157,8 @@ export class JSONRPCService {
       if (this.socket) {
         // Set up one-time close handler to resolve the promise
         const onClose = () => {
-          if (this.socket) {
-            this.socket.removeEventListener('close', onClose);
-          }
+          if (this.socket) this.socket.removeEventListener('close', onClose);
+
           this.state.connectionState = ConnectionState.DISCONNECTED;
           this.state.connected = false;
           resolve();

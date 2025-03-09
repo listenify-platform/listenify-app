@@ -47,7 +47,7 @@
           <div :class="$style.desertElementFour"></div>
         </div>
 
-        <LazyRoomCanvasAudience ref="audienceView" :current-user="user" :enable-animation="true" :show-debug="showDebug" />
+        <LazyRoomCanvasAudience ref="audienceView" :current-user="user!" :users-data="currentRoom.users" :enable-animation="true" />
 
         <!-- Controls overlay -->
         <div :class="$style.controlsOverlay">
@@ -109,8 +109,8 @@
 </template>
 
 <script lang="ts" setup>
-import { LazyRoomCanvasAudience, RoomChatboxMain } from '#components';
-import type { Users } from '@/custom';
+import { LazyRoomCanvasAudience, RoomCanvasAudience, RoomChatboxMain } from '#components';
+import { RPC, type Chat, type Users } from '@/custom';
 
 // Route and navigation
 const route = useRoute();
@@ -126,15 +126,14 @@ const { user } = userStore;
 const isLoading = ref(true);
 const loadingMessage = ref('Loading room...');
 const roomNotFound = ref(false);
-const audienceView = ref(null);
-const showDebug = ref(false);
-const chatMessages = ref([]);
+const audienceView = ref<typeof RoomCanvasAudience | null>(null);
+const chatMessages = ref<Chat.Message[]>([]);
 const userVote = ref<'woot' | 'meh' | 'grab' | null>(null);
 const isComponentActive = ref(true); // Track if component is in the foreground
 
 // Room data
 const activeUsers = computed(() => roomStore.getRoomUsers || []);
-const currentRoom = computed(() => roomStore.getCurrentRoom);
+const currentRoom = computed(() => roomStore.getCurrentRoom || { users: [] as Users.Public[] });
 const roomStats = computed(() => ({
   woots: currentRoom.value?.stats?.woots || 0,
   mehs: currentRoom.value?.stats?.mehs || 0,
@@ -163,12 +162,12 @@ const loadRoom = async () => {
     }
     
     // Check if we're already in this room
-    const isAlreadyInRoom = currentRoom.value && currentRoom.value.id === room[0].id;
+    const isAlreadyInRoom = currentRoom.value && currentRoom.value.id === room.id;
     
     if (!isAlreadyInRoom) {
       loadingMessage.value = 'Joining room...';
       console.log(room);
-      await roomStore.joinRoom(room[0].id);
+      await roomStore.joinRoom(room.id);
     }
     
     // Start polling for room updates
@@ -241,6 +240,33 @@ const sendChatMessage = async (message: string) => {
   }
 };
 
+// Define RPC event handlers with proper wrapper functions
+function handleUserJoin(data: { roomId: string, user: Users.Public }) {
+  if (!currentRoom.value || data.roomId !== currentRoom.value.id) return;
+  
+  // Call the exposed method on the audience component
+  if (audienceView.value) {
+    audienceView.value.addUser(data.user);
+  }
+}
+
+function handleUserLeave(data: { roomId: string, userId: string }) {
+  if (!currentRoom.value || data.roomId !== currentRoom.value.id) return;
+  
+  // Call the exposed method on the audience component
+  if (audienceView.value) {
+    audienceView.value.removeUser(data.userId);
+  }
+}
+
+// Handle chat messages from RPC
+function handleChatMessage(data: { roomId: string, message: Chat.Message }) {
+  if (!currentRoom.value || data.roomId !== currentRoom.value.id) return;
+  
+  // Add message to chat
+  chatMessages.value.push(data.message);
+}
+
 // Helper methods
 const getUserInitials = (user: Users.Public) => {
   if (!user.username) return '?';
@@ -299,13 +325,15 @@ const resumeRoomUpdates = () => {
 
 // Lifecycle hooks
 onMounted(async () => {
-  // Initialize the room store if needed
-  if (!roomStore.initialized) {
-    await roomStore.initialize();
-  }
-  
+  const rpc = useRpc();
+
   // Load the room data
   await loadRoom();
+
+  // Bind RPC events using wrapper functions
+  rpc.on(RPC.Methods.USER_JOINED_ROOM, handleUserJoin);
+  rpc.on(RPC.Methods.USER_LEFT_ROOM, handleUserLeave);
+  rpc.on(RPC.Methods.ROOM_CHAT_MESSAGE, handleChatMessage);
   
   // Set up event listeners
   window.addEventListener('focus', handleWindowFocus);
@@ -314,8 +342,12 @@ onMounted(async () => {
 
 // Cleanup on final unmount (component destroyed, not just deactivated)
 onUnmounted(() => {
-  // IMPORTANT: We do NOT leave the room here anymore
-  // This allows the room to stay active in the background
+  const rpc = useRpc();
+
+  // Remove RPC event handlers
+  rpc.off(RPC.Methods.USER_JOINED_ROOM);
+  rpc.off(RPC.Methods.USER_LEFT_ROOM);
+  rpc.off(RPC.Methods.ROOM_CHAT_MESSAGE);
   
   // Clean up intervals but keep room connection
   stopRoomUpdates();

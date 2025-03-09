@@ -1,4 +1,3 @@
-import { computed } from 'vue';
 import { ErrorCode, ConnectionState, getJSONRPCServiceSync } from '@/custom';
 
 /**

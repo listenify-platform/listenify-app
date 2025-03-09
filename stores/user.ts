@@ -76,10 +76,11 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
         onSuccess: (response) => {
           state.loading = false;
           state.isAuthenticated = true;
-
           state.user = response.user;
           state.token = response.token;
           userStorage.set('access_token', response.token);
+
+          initJSONRPCService({ url: config.WS_URL, token: response.token, debug: !config.IS_PRODUCTION });
         }
       }
     );
@@ -101,10 +102,11 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
         onSuccess: (response) => {
           state.loading = false;
           state.isAuthenticated = true;
-
           state.user = response.user;
           state.token = response.token;
           userStorage.set('access_token', response.token);
+
+          initJSONRPCService({ url: config.WS_URL, token: response.token, debug: !config.IS_PRODUCTION });
         }
       }
     );

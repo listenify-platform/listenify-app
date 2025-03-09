@@ -8,6 +8,9 @@ export const useRoomStore = useInitializableStore(defineStore('room', () => {
   // Track event subscriptions for cleanup
   const eventSubscriptions: EventSubscription[] = [];
 
+  // Track beforeunload event handler for cleanup
+  let beforeUnloadHandler: ((event: BeforeUnloadEvent) => void) | null = null;
+
   // Use composition API style for Pinia store
   const state = reactive<Rooms.RoomsState>({
     error: null,
@@ -68,15 +71,54 @@ export const useRoomStore = useInitializableStore(defineStore('room', () => {
     try {
       // Subscribe to RPC events
       subscribeToRoomEvents();
+      
+      // Set up beforeunload handler for graceful room exit
+      setupBeforeUnloadHandler();
     } catch (error: any) {
       state.error = error?.message;
       state.loading = false;
     }
   }
 
+  // Set up handler for page refresh/close
+  function setupBeforeUnloadHandler() {
+    // Only set up the handler if it doesn't already exist
+    if (!beforeUnloadHandler) {
+      beforeUnloadHandler = (event: BeforeUnloadEvent) => {
+        // If user is in a room, leave gracefully
+        if (state.currentRoom) {
+          // Use notify instead of call since we won't be around to handle the response
+          rpc.notify(
+            RPC.Methods.LEAVE_ROOM, 
+            { roomId: state.currentRoom.id }
+          );
+          
+          // Clear room state immediately
+          state.currentRoom = null;
+          state.isInQueue = false;
+          state.isCurrentDJ = false;
+          state.queuePosition = -1;
+          state.userVote = null;
+        }
+      };
+      
+      // Add the event listener
+      window.addEventListener('beforeunload', beforeUnloadHandler);
+    }
+  }
+
+  // Clean up the beforeunload handler
+  function cleanupBeforeUnloadHandler() {
+    if (beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      beforeUnloadHandler = null;
+    }
+  }
+
   // Unsubscribe from all events when the component is unmounted
   onUnmounted(() => {
     unsubscribeFromAllEvents();
+    cleanupBeforeUnloadHandler();
   });
 
   // Subscribe to all room-related RPC events
@@ -181,6 +223,10 @@ export const useRoomStore = useInitializableStore(defineStore('room', () => {
 
       state.currentRoom = roomState;
       updateUserQueueStatus();
+      
+      // Ensure beforeunload handler is set up
+      setupBeforeUnloadHandler();
+      
       state.loading = false;
       return roomState;
     } catch (error: any) {
@@ -481,7 +527,7 @@ export const useRoomStore = useInitializableStore(defineStore('room', () => {
   async function getRoomBySlug(slug: string) {
     try {
       // Use API for data loading
-      return await execute<Rooms.Room[]>(
+      return await execute<Rooms.Room>(
         () => api.room.getRoomBySlug(slug),
         {
           onError: (error) => {
