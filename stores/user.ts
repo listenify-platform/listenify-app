@@ -1,7 +1,9 @@
+import { _getAppConfig } from '#app';
 import { useApi } from '@/composables/useApi';
-import { type API, type Users, userStorage, useInitializableStore } from '@/custom';
+import { type API, type Users, userStorage, useInitializableStore, initJSONRPCService } from '@/custom';
 
 export const useUserStore = useInitializableStore(defineStore('user', () => {
+  const config = _getAppConfig();
   const { api, execute } = useApi();
 
   // Define reactive state using composition API style
@@ -50,6 +52,8 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
             state.token = token;
             state.loading = false;
             state.isAuthenticated = true;
+
+            initJSONRPCService({ url: config.WS_URL, token, debug: !config.IS_PRODUCTION });
           }
         }
       );

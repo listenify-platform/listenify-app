@@ -70,7 +70,7 @@ const props = defineProps({
   },
   showDebug: {
     type: Boolean,
-    default: import.meta.env.DEV
+    default: true
   },
   enableAnimation: {
     type: Boolean,

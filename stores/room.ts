@@ -1,10 +1,9 @@
 import { useInitializableStore, type EventSubscription, type Rooms, type Users, type Medias, RPC } from '@/custom';
-import type { JSONRPCService } from '~/custom/services/rpc/service';
 
 export const useRoomStore = useInitializableStore(defineStore('room', () => {
   // Get both the API and RPC services
   const { api, execute } = useApi();
-  const rpc = useRpc().then(r => r) as unknown as JSONRPCService;
+  const rpc = useRpc();
 
   // Track event subscriptions for cleanup
   const eventSubscriptions: EventSubscription[] = [];

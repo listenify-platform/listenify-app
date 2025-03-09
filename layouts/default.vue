@@ -23,25 +23,8 @@
 
 <script lang="ts" setup>
 import { LazyAppPlayerBar } from '#components';
-import { initJSONRPCService } from '@/custom';
 
-const config = useAppConfig();
 const { isVisible } = usePlayerStore();
-const { token, isAuthenticated } = useUserStore();
-
-function initializeRPC(token: string): void {
-  if (!isAuthenticated)
-    return;
-
-  // initialize RPC
-  initJSONRPCService({ url: config.WS_URL, token, debug: !config.IS_PRODUCTION });
-}
-
-function mounted(): void {
-  initializeRPC(token!);
-}
-
-onMounted(mounted);
 </script>
 
 <template>
