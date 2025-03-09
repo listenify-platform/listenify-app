@@ -1,5 +1,7 @@
 // Validation rules for authentication inputs based on Go backend
 
+import { ApiError } from "../services";
+
 /**
  * Password validation rule
  * Validates password according to backend requirements:
@@ -92,6 +94,7 @@ export const confirmPasswordRule = (password: string) => (value: string): boolea
  */
 export const setupAuth = () => {
   const userStore = useUserStore();
+  const { showNotification } = useNotifications();
   const { handleSuccessfulAuth } = useAuthRedirect();
 
   const loading = ref(false);
@@ -164,7 +167,11 @@ export const setupAuth = () => {
           // Validate all fields are filled
           for (const key in loginForm) {
             if (!loginForm[key as keyof typeof loginForm]) {
-              // showNotification('warning', 'Please fill in all fields.', 'Missing information');
+              showNotification({
+                type: 'warning',
+                text: 'Please fill all fields',
+                title: 'Missing information'
+              });
               loading.value = false;
               return;
             }
@@ -177,7 +184,11 @@ export const setupAuth = () => {
               handleSuccessfulAuth();
             }
           } catch (error) {
-            // handleApiError(error, 'login');
+            showNotification({
+              type: 'error',
+              text: error instanceof ApiError ? error.details.message : 'Unexcepted error',
+              title: 'Cannot authorize to account'
+            })
           }
           break;
         }
@@ -186,7 +197,11 @@ export const setupAuth = () => {
           // Validate all fields are filled
           for (const key in registerForm) {
             if (!registerForm[key as keyof typeof registerForm]) {
-              // showNotification('warning', 'Please fill in all fields.', 'Missing information');
+              showNotification({
+                type: 'warning',
+                text: 'Please fill all fields',
+                title: 'Missing information'
+              });
               loading.value = false;
               return;
             }
@@ -194,7 +209,11 @@ export const setupAuth = () => {
 
           // Validate password and confirmation match
           if (registerForm.password !== registerForm.confirmPassword) {
-            // showNotification('error', 'Password and confirmation do not match.', 'Password mismatch');
+            showNotification({
+              type: 'error',
+              text: 'Password dosen\'t matches',
+              title: 'Cannot create account'
+            });
             loading.value = false;
             return;
           }
@@ -202,12 +221,19 @@ export const setupAuth = () => {
           try {
             const request = await userStore.register(registerForm);
             if (request) {
-              // showNotification('success', 'Your account has been created successfully!', 'Account created');
-              // After registration, handle redirect
+              showNotification({
+                type: 'success',
+                text: 'Welcome to Listenify, enjoy music together!',
+                title: 'Account created'
+              });
               handleSuccessfulAuth();
             }
           } catch (error) {
-            // handleApiError(error, 'register');
+            showNotification({
+              type: 'error',
+              text: error instanceof ApiError ? error.details.message : 'Unexcepted error',
+              title: 'Cannot create account'
+            })
           }
           break;
         }
@@ -216,8 +242,11 @@ export const setupAuth = () => {
           throw new Error(`Invalid form`);
       }
     } catch (error) {
-      console.error(`Error during ${currentTab.value}:`, error);
-      // showNotification('error', 'An unexpected error occurred. Please try again.', 'Error');
+      showNotification({
+        type: 'error',
+        text: error instanceof ApiError ? error.details.message : 'Unexcepted error',
+        title: `action '${currentTab.value}' error`
+      });
     }
 
     loading.value = false;

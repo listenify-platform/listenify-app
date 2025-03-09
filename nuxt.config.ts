@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
+  modules: ['nuxt3-notifications', '@nuxtjs/tailwindcss', '@pinia/nuxt'],
   plugins: ['~/plugins/init-auth.ts', '~/plugins/fontawesome.ts', '~/plugins/tippy.ts'],
 
   hooks: {
@@ -47,5 +47,9 @@ export default defineNuxtConfig({
     viewer: true,
     cssPath: ['~/assets/css/tailwind.css', { injectPosition: "first" }],
     editorSupport: true
-  }
+  },
+
+  nuxtNotifications: {
+    componentName: 'AppNotifications' // 'foo-bar' or 'FooBar' for components of two or more words
+  },
 })

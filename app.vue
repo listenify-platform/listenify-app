@@ -5,5 +5,7 @@
       <NuxtPage />
     </NuxtLayout>
   </listenify-root>
+  
   <NuxtRouteAnnouncer />
+  <CommonNotifications />
 </template>

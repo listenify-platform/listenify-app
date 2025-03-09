@@ -563,6 +563,11 @@
   resolved "https://registry.yarnpkg.com/@kwsites/promise-deferred/-/promise-deferred-1.1.1.tgz#8ace5259254426ccef57f3175bc64ed7095ed919"
   integrity sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw==
 
+"@kyvg/vue3-notification@^3.4.1":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@kyvg/vue3-notification/-/vue3-notification-3.4.1.tgz#0a80b2db784cc41ba6279c208a9e653ce70abaad"
+  integrity sha512-WhTWCbF36JHLJR5UdKmJF7KXGOGVy4tLeaJuKTHZhwttZWnbF9w1/c2d32tvCSwY9CdeX/n9uoaKWLMKK3vOyg==
+
 "@mapbox/node-pre-gyp@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@mapbox/node-pre-gyp/-/node-pre-gyp-2.0.0.tgz#16d1d9049c0218820da81a12ae084e7fe67790d1"
@@ -4014,6 +4019,14 @@ nth-check@^2.0.1:
   dependencies:
     boolbase "^1.0.0"
 
+nuxt3-notifications@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/nuxt3-notifications/-/nuxt3-notifications-1.3.0.tgz#6d7f62e80584d5d0b28c1c6293be2b37ae3a1569"
+  integrity sha512-NDHnRcz1ws2q+X7VvMKusZAqjY3YQDLb4ovBTOvHN2ThTEfyeMiB+9IVK32vsuDsPv7lwXme5bCQY5Q09PlPBQ==
+  dependencies:
+    "@kyvg/vue3-notification" "^3.4.1"
+    scule "^1.0.0"
+
 nuxt@^3.16.0:
   version "3.16.0"
   resolved "https://registry.yarnpkg.com/nuxt/-/nuxt-3.16.0.tgz#07e23f1e4636dcc2807587080110034f9cef7699"
@@ -4954,7 +4967,7 @@ sass@^1.85.1:
   optionalDependencies:
     "@parcel/watcher" "^2.4.1"
 
-scule@^1.3.0:
+scule@^1.0.0, scule@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/scule/-/scule-1.3.0.tgz#6efbd22fd0bb801bdcc585c89266a7d2daa8fbd3"
   integrity sha512-6FtHJEvt+pVMIB9IBY+IcCJ6Z5f1iQnytgyfKMhDKgmzYG+TeH/wx1y3l27rshSbLiSanrR9ffZDrEsmjlQF2g==
