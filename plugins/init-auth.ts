@@ -1,5 +1,10 @@
 import { userStorage } from "~/custom";
 
+const IGNORE_PATHS = [
+  '/', // home
+  '/auth', // auth page
+];
+
 export default defineNuxtPlugin(() => {
   const userStore = useUserStore();
   const router = useRouter();
@@ -18,7 +23,7 @@ export default defineNuxtPlugin(() => {
         
         // Check if there's a saved path in localStorage from a previous session
         const savedPath = userStorage.get('last_path');
-        if (savedPath && savedPath !== '/auth' && savedPath !== '/') {
+        if (savedPath && !IGNORE_PATHS.includes(savedPath)) {
           console.log('returning to saved path', savedPath);
           userStorage.set('last_path', null); // Clear it after use
           return router.push(savedPath);
@@ -33,7 +38,7 @@ export default defineNuxtPlugin(() => {
   
   // Save the current path when user navigates
   router.afterEach((to) => {
-    if (userStore.isAuthenticated && to.path !== '/auth') {
+    if (userStore.isAuthenticated && !IGNORE_PATHS.includes(to.path)) {
       userStorage.set('last_path', to.path);
     }
   });
