@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxtjs/date-fns": "^1.5.0",
     "@nuxtjs/tailwindcss": "6.13.1",
     "@pinia/nuxt": "0.10.1",
     "@vesp/nuxt-fontawesome": "1.2.1",
@@ -28,6 +29,8 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@nuxtjs/moment": "^1.6.1",
+    "moment": "^2.30.1",
     "nuxt3-notifications": "^1.3.0",
     "sass": "^1.85.1"
   }

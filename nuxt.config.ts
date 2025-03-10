@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   modules: ['nuxt3-notifications', '@nuxtjs/tailwindcss', '@pinia/nuxt'],
-  plugins: ['~/plugins/init-auth.ts', '~/plugins/fontawesome.ts', '~/plugins/tippy.ts'],
+  plugins: ['~/plugins/init-auth.ts', '~/plugins/fontawesome.ts', '~/plugins/tippy.ts', '~/plugins/moment.ts'],
 
   hooks: {
     "prerender:routes"({ routes }) {
