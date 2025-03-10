@@ -142,7 +142,7 @@ export const useChatStore = useInitializableStore(defineStore('chat', () => {
     // If not found in room users, try to get from user store
     if (!roomUser) {
       try {
-        const userProfile = await userStore.getUserProfile(msg.userId);
+        const userProfile = await userStore.getUser(msg.userId);
         if (userProfile) {
           roomUser = {
             id: userProfile.id,
