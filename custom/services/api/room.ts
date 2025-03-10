@@ -1,5 +1,5 @@
-import { BaseApiService } from '../base';
-import type { Rooms } from '../../../types';
+import type { Rooms } from '~/custom/types';
+import { BaseApiService } from './base';
 
 /**
  * Service for room-related API calls
@@ -123,4 +123,4 @@ class RoomService extends BaseApiService {
 }
 
 // Create and export a singleton instance
-export const roomModule = new RoomService();
+export const roomService = new RoomService();

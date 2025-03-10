@@ -196,6 +196,162 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
     );
   }
 
+  async function getUser(userId: string) {
+    if (!state.isAuthenticated)
+      return;
+
+    state.loading = true;
+
+    return await execute<Users.Public>(
+      () => api.user.getUser(userId),
+      {
+        onError: () => {
+          state.loading = false;
+        },
+        onSuccess: (user) => {
+          state.loading = false;
+          return user;
+        }
+      }
+    );
+  }
+
+  async function searchUsers(query: string, page: number = 1, limit: number = 20) {
+    if (!state.isAuthenticated)
+      return;
+
+    state.loading = true;
+
+    return await execute<Users.Public[]>(
+      () => api.user.searchUsers(query, page, limit),
+      {
+        onError: () => {
+          state.loading = false;
+        },
+        onSuccess: (users) => {
+          state.loading = false;
+          return users;
+        }
+      }
+    );
+  }
+
+  async function getOnlineUsers() {
+    if (!state.isAuthenticated)
+      return;
+
+    state.loading = true;
+
+    return await execute<Users.Public[]>(
+      () => api.user.getOnlineUsers(),
+      {
+        onError: () => {
+          state.loading = false;
+        },
+        onSuccess: (users) => {
+          state.loading = false;
+          return users;
+        }
+      }
+    );
+  }
+
+  async function getFollowing(page: number = 1, limit: number = 20) {
+    if (!state.isAuthenticated)
+      return;
+
+    state.loading = true;
+
+    return await execute<Users.Public[]>(
+      () => api.user.getFollowing(page, limit),
+      {
+        onError: () => {
+          state.loading = false;
+        },
+        onSuccess: (users) => {
+          state.loading = false;
+          if (state.user) {
+            state.user.connections = {
+              ...state.user.connections,
+              following: users.map(user => user.id)
+            };
+          }
+          return users;
+        }
+      }
+    );
+  }
+
+  async function getFollowers(page: number = 1, limit: number = 20) {
+    if (!state.isAuthenticated)
+      return;
+
+    state.loading = true;
+
+    return await execute<Users.Public[]>(
+      () => api.user.getFollowers(page, limit),
+      {
+        onError: () => {
+          state.loading = false;
+        },
+        onSuccess: (users) => {
+          state.loading = false;
+          if (state.user) {
+            state.user.connections = {
+              ...state.user.connections,
+              followers: users.map(user => user.id)
+            };
+          }
+          return users;
+        }
+      }
+    );
+  }
+
+  async function followUser(userId: string) {
+    if (!state.isAuthenticated)
+      return;
+
+    state.loading = true;
+
+    return await execute<API.SuccessResponse>(
+      () => api.user.followUser(userId),
+      {
+        onError: () => {
+          state.loading = false;
+        },
+        onSuccess: async (response) => {
+          state.loading = false;
+          // Refresh following list after successful follow
+          await getFollowing();
+          return response;
+        }
+      }
+    );
+  }
+
+  async function unfollowUser(userId: string) {
+    if (!state.isAuthenticated)
+      return;
+
+    state.loading = true;
+
+    return await execute<API.SuccessResponse>(
+      () => api.user.unfollowUser(userId),
+      {
+        onError: () => {
+          state.loading = false;
+        },
+        onSuccess: async (response) => {
+          state.loading = false;
+          // Refresh following list after successful unfollow
+          await getFollowing();
+          return response;
+        }
+      }
+    );
+  }
+
   // Return everything that should be available outside the store
   return {
     // State
@@ -221,6 +377,15 @@ export const useUserStore = useInitializableStore(defineStore('user', () => {
     updateProfile,
     changePassword,
     refreshToken,
+    // User fetching
+    getUser,
+    // New social and search actions
+    searchUsers,
+    getOnlineUsers,
+    getFollowing,
+    getFollowers,
+    followUser,
+    unfollowUser,
   };
 }), {
   // Default initialization options

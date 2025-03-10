@@ -1,5 +1,5 @@
-import { BaseApiService } from '../base';
-import type { Users, API } from '../../../types';
+import type { API, Users } from '~/custom/types';
+import { BaseApiService } from './base';
 
 /**
  * Service for user-related API calls
@@ -107,4 +107,4 @@ class UserService extends BaseApiService {
 }
 
 // Create and export a singleton instance
-export const userModule = new UserService();
+export const userService = new UserService();

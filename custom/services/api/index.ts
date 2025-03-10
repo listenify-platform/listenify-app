@@ -1,13 +1,11 @@
 export * from './base';
-export * from './modules';
 
-import { authModule, roomModule, userModule } from './modules';
+import { authService } from './auth';
+import { roomService } from './room';
+import { userService } from './user';
 
 export const apiModules = {
-  auth: authModule,
-  user: userModule,
-  room: roomModule,
-  // playlist: playlistService,
-  // media: mediaService,
-  // health: healthService
+  auth: authService,
+  user: userService,
+  room: roomService,
 };

@@ -1,10 +1,10 @@
-import { BaseApiService } from '../base';
-import type { API, Users } from '../../../types';
+import { BaseApiService } from './base';
+import type { API, Users } from '~/custom/types';
 
 /**
  * Service for authentication related API calls
  */
-class AuthModule extends BaseApiService {
+class AuthService extends BaseApiService {
   /**
    * Register a new user
    * @param data Registration details
@@ -57,4 +57,4 @@ class AuthModule extends BaseApiService {
 }
 
 // Create and export a singleton instance
-export const authModule: AuthModule = new AuthModule();
+export const authService: AuthService = new AuthService();
