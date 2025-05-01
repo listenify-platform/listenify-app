@@ -177,7 +177,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div :class="$style.home">
+  <div :class="$style.home" v-show="true">
     <LazyAppHomeWelcomeBanner />
     
     <!-- All Communities -->
